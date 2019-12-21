@@ -1,0 +1,72 @@
+= mockito-threadsafe-mockmaker - threadsafe mocks with Mockito
+
+== What it does
+
+Executes the mock invocation under a `synchronized(mockobject) { ... }` block. This makes it possible to use Mockito mocks in a multi-threaded test. Mockito is not thread-safe itself. One sign of problems are NullPointerExceptions without proper explanation. For example, a mocked method return value might be null from time to time and this leads to flaky tests.
+Multi-threaded tests are more common with the rise of popularity of reactive programming where a simple integration test scenario might be executed on multiple threads. 
+
+== Usage
+
+Adding the dependency will activate the Mockito MockMaker extension provided by this library.
+
+This library is available via Jitpack. The repository information is at https://jitpack.io/#lhotari/mockito-threadsafe-mockmaker .
+
+=== Adding dependency in Gradle
+
+```
+repositories {
+    maven {
+        url 'https://jitpack.io'
+        content {
+            // limits using the jitpack repository for specific artifacts
+            includeGroup 'com.github.lhotari'
+        }
+    }
+}
+
+dependencies {
+    testImplementation 'com.github.lhotari:mockito-threadsafe-mockmaker:0.1.0'
+}
+```
+
+=== Adding dependency in Maven
+
+```
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+```
+
+```
+<dependency>
+    <groupId>com.github.lhotari</groupId>
+    <artifactId>mockito-threadsafe-mockmaker</artifactId>
+    <version>0.1.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+=== Usage in code
+
+synchronize access on the mock object's object monitor when stubbing the methods. synchronization is also required for verification. 
+```
+SomeClass mymock = mock(SomeClass.class);
+synchronized (mymock) {
+    when(mymock.someMethod()).thenReturn(new Something());
+    ....
+}
+
+...
+// code that uses the mock in some other thread
+...
+
+synchronized (mymock) {
+   verify(mymock, times(1)).someMethod();
+}
+
+```
+
+
